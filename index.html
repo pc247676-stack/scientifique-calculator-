@@ -1,0 +1,188 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Scientific Calculator</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;min-height:100vh;
+ display:flex;justify-content:center;align-items:center;
+ background:#dce3e9;font-family:Arial;
+}
+.calc{
+ width:370px;background:#303d49;
+ padding:18px;border-radius:20px;
+ box-shadow:0 15px 35px #0005;
+}
+.brand{color:#fff;font-size:17px;font-weight:bold}
+.model{color:#aab8c4;font-size:11px;margin-top:5px}
+.screen{
+ background:#c6d5bd;border:5px solid #202c35;
+ border-radius:8px;height:100px;margin:15px 0;
+ padding:12px;text-align:right;
+ color:#17251d;overflow:hidden;
+}
+#expression{font-size:17px;min-height:25px}
+#result{font-size:30px;font-weight:bold;margin-top:8px}
+.buttons{
+ display:grid;grid-template-columns:repeat(5,1fr);
+ gap:7px;
+}
+button{
+ border:0;border-radius:7px;height:48px;
+ background:#e1e7eb;color:#17232d;
+ font-size:16px;font-weight:bold;
+ cursor:pointer;box-shadow:0 3px 0 #a6b1b8;
+}
+button:active{transform:translateY(2px);box-shadow:none}
+.dark{background:#8496a5;color:white}
+.orange{background:#e99c45;color:#fff}
+.blue{background:#3683ad;color:white}
+.equal{background:#e7a13e;color:white}
+.small{font-size:13px}
+.footer{text-align:center;color:#aab8c4;font-size:10px;margin-top:15px}
+</style>
+</head>
+<body>
+<div class="calc">
+ <div class="brand">CASIO</div>
+ <div class="model">fx-991ES PLUS · SCIENTIFIC</div>
+
+ <div class="screen">
+  <div id="expression"></div>
+  <div id="result">0</div>
+ </div>
+
+ <div class="buttons">
+  <button class="orange small" onclick="clearAll()">AC</button>
+  <button class="dark small" onclick="del()">DEL</button>
+  <button class="dark small" onclick="add('(')">(</button>
+  <button class="dark small" onclick="add(')')">)</button>
+  <button class="blue small" onclick="toggleMode()" id="mode">DEG</button>
+
+  <button class="dark small" onclick="add('sin(')">sin</button>
+  <button class="dark small" onclick="add('cos(')">cos</button>
+  <button class="dark small" onclick="add('tan(')">tan</button>
+  <button class="dark small" onclick="add('sqrt(')">√</button>
+  <button class="dark small" onclick="add('^2')">x²</button>
+
+  <button class="dark small" onclick="add('log(')">log</button>
+  <button class="dark small" onclick="add('ln(')">ln</button>
+  <button class="dark small" onclick="add('^')">xʸ</button>
+  <button class="dark small" onclick="add('pi')">π</button>
+  <button class="dark small" onclick="add('/')">÷</button>
+
+  <button onclick="add('7')">7</button>
+  <button onclick="add('8')">8</button>
+  <button onclick="add('9')">9</button>
+  <button class="dark small" onclick="add('!')">x!</button>
+  <button class="orange" onclick="add('*')">×</button>
+
+  <button onclick="add('4')">4</button>
+  <button onclick="add('5')">5</button>
+  <button onclick="add('6')">6</button>
+  <button class="dark small" onclick="add('%')">%</button>
+  <button class="orange" onclick="add('-')">−</button>
+
+  <button onclick="add('1')">1</button>
+  <button onclick="add('2')">2</button>
+  <button onclick="add('3')">3</button>
+  <button class="dark small" onclick="add('Ans')">Ans</button>
+  <button class="orange" onclick="add('+')">+</button>
+
+  <button onclick="add('0')">0</button>
+  <button onclick="add('.')">.</button>
+  <button class="dark small" onclick="add('^3')">x³</button>
+  <button class="dark small" onclick="add('sqrt(')">√x</button>
+  <button class="equal" onclick="calculate()">=</button>
+ </div>
+ <div class="footer">Scientific Calculator · Offline</div>
+</div>
+
+<script>
+let expression="";
+let answer=0;
+let degree=true;
+
+const exp=document.getElementById("expression");
+const res=document.getElementById("result");
+
+function update(){
+ exp.textContent=expression.replaceAll("*","×").replaceAll("/","÷");
+}
+function add(value){
+ expression+=value;
+ update();
+}
+function clearAll(){
+ expression="";
+ res.textContent="0";
+ update();
+}
+function del(){
+ expression=expression.slice(0,-1);
+ update();
+}
+function toggleMode(){
+ degree=!degree;
+ document.getElementById("mode").textContent=degree?"DEG":"RAD";
+}
+function calculate(){
+ try{
+  let s=expression.replaceAll("×","*").replaceAll("÷","/");
+  if(!s) return;
+
+  if(!/^[0-9+\-*/().%!^a-zA-Z]+$/.test(s)) throw Error();
+
+  s=s.replace(/Ans/g,String(answer));
+  s=s.replace(/pi/g,"Math.PI");
+  s=s.replace(/sqrt\(/g,"Math.sqrt(");
+  s=s.replace(/log\(/g,"Math.log10(");
+  s=s.replace(/ln\(/g,"Math.log(");
+
+  if(degree){
+   s=s.replace(/sin\(/g,"Math.sin(Math.PI/180*");
+   s=s.replace(/cos\(/g,"Math.cos(Math.PI/180*");
+   s=s.replace(/tan\(/g,"Math.tan(Math.PI/180*");
+  }else{
+   s=s.replace(/sin\(/g,"Math.sin(");
+   s=s.replace(/cos\(/g,"Math.cos(");
+   s=s.replace(/tan\(/g,"Math.tan(");
+  }
+
+  s=s.replace(/\^/g,"**");
+  s=s.replace(/(\d+(?:\.\d+)?)%/g,"($1/100)");
+
+  // Factorial
+  s=s.replace(/(\d+(?:\.\d+)?)!/g,
+   (_,n)=>{
+    let x=Number(n);
+    if(!Number.isInteger(x)||x<0||x>170) throw Error();
+    let f=1;
+    for(let i=2;i<=x;i++)f*=i;
+    return String(f);
+   });
+
+  if(!/^[0-9+\-*/().,!a-zA-Z*]+$/.test(s)) throw Error();
+
+  const value=Function('"use strict";return ('+s+')')();
+  if(!Number.isFinite(value)) throw Error();
+
+  answer=value;
+  res.textContent=Number(value.toPrecision(12)).toString();
+ }catch(e){
+  res.textContent="Error";
+ }
+}
+document.addEventListener("keydown",e=>{
+ if(/[0-9.+\-*/()%]/.test(e.key)&&e.key.length===1)add(e.key);
+ if(e.key==="Enter")calculate();
+ if(e.key==="Backspace")del();
+ if(e.key==="Escape")clearAll();
+});
+</script>
+</body>
+</html>
